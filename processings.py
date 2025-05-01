@@ -25,6 +25,24 @@ def date_processing(data,verbose=False):
 
     return data_result
 
+def date_unprocessing(data,verbose=False):
+    # Retourne la colonne MOIS à partir de MOIS_sin et MOIS_cos
+    phase = np.arctan2(data['MOIS_sin'], data['MOIS_cos'])
+    mois = (phase % (2 * np.pi)) * 12 / (2 * np.pi)
+    mois = np.round(mois).astype(int)
+
+    # Pour éviter mois=0 car janvier = 1 :
+    mois[mois == 0] = 1
+    data['MOIS'] = mois
+
+    data.drop('MOIS_sin', axis=1, inplace=True)
+    data.drop('MOIS_cos', axis=1, inplace=True)
+
+    if verbose:
+        print(data.head())
+
+    return data
+
 def merge_df(data_hydro, data_pop, verbose=False):
     df_pop_long = data_pop.melt(id_vars=['Code', 'REGION_ADM_QC_TXT'], 
                          value_vars=[str(an) for an in range(2016,2024)], 
@@ -88,4 +106,33 @@ def normalize(data, verbose=False):
     if verbose : print(data.head())
 
     return data
+
+def unnormalize(data_prenorm, data_to_unnorm, preds=False, verbose=False):
+    if verbose:
+        print("Data to unnormalize : ")
+        print(data_to_unnorm.head())
+
+        print("Data pre_normalization : ")
+        print(data_prenorm.head())
+
+    target_columns = ['Total (kWh)', 'population']
+
+    scaler = MinMaxScaler()
+    data_prenorm[target_columns] = scaler.fit_transform(data_prenorm[target_columns])
+
+    data_to_unnorm[target_columns] = scaler.inverse_transform(data_to_unnorm[target_columns])
+
+    if preds :
+        min_kWh = scaler.data_min_[target_columns.index('Total (kWh)')]
+        max_kWh = scaler.data_max_[target_columns.index('Total (kWh)')]
+        data_to_unnorm['Total (kWh) prédit'] = data_to_unnorm['Total (kWh) prédit'] * (max_kWh - min_kWh) + min_kWh
+
+    if verbose:
+        print("un-normalization done : ")
+        print(data_to_unnorm.head())
+
+    return data_to_unnorm
+
+
+
 
