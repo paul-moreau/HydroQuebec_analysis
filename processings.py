@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+
+from sklearn.preprocessing import MinMaxScaler
+
 def date_processing(data,verbose=False):
     data['ANNEE_MOIS'] = pd.to_datetime(data['ANNEE_MOIS'])
 
@@ -21,6 +24,7 @@ def date_processing(data,verbose=False):
         print(data_result[['MOIS_sin', 'MOIS_cos']].head())
 
     return data_result
+
 def merge_df(data_hydro, data_pop, verbose=False):
     df_pop_long = data_pop.melt(id_vars=['Code', 'REGION_ADM_QC_TXT'], 
                          value_vars=[str(an) for an in range(2016,2024)], 
@@ -70,3 +74,18 @@ def process_data_pop(data, verbose=False):
     if verbose: print(data.head()) 
 
     return data
+
+def to_one_hot(data, verbose=False):
+    return pd.get_dummies(pd.get_dummies(data, columns=['SECTEUR']), columns=['REGION_ADM_QC_TXT'])
+
+def normalize(data, verbose=False):
+    colonnes_a_normaliser = ['Total (kWh)', 'population']
+
+    scaler = MinMaxScaler()
+
+    data[colonnes_a_normaliser] = scaler.fit_transform(data[colonnes_a_normaliser])
+
+    if verbose : print(data.head())
+
+    return data
+
