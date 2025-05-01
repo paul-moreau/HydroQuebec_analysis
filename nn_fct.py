@@ -193,3 +193,50 @@ def train_test(model, learning_rate, train_loader, test_loader, patience, num_ep
 
     return (model, best_model_state), (all_loss_training, all_mae_training), (all_loss_test, all_mae_test)
 
+def validate_model(model, val_loader, device='cpu'):
+    criterion = nn.MSELoss()  # Régression -> Mean Squared Error
+    mae_fn = nn.L1Loss()
+
+    model.eval()
+    val_loss = 0.0
+    val_mae = 0.0
+    with torch.no_grad():
+        for x_val, y_val in val_loader:
+            x_val, y_val = x_val.to(device), y_val.to(device)
+
+            y_pred = model(x_val).squeeze(1)
+            loss = criterion(y_pred, y_val)
+            mae = mae_fn(y_pred, y_val)
+
+            val_loss += loss.item() * x_val.size(0)
+            val_mae += mae.item() * x_val.size(0)
+
+    val_loss = val_loss / len(val_loader.dataset)
+    val_mae = val_mae / len(val_loader.dataset)
+
+    return val_loss, val_mae
+
+def validate_analyze(model, val_loader, device='cpu'):
+    criterion = nn.MSELoss()  # Régression -> Mean Squared Error
+    mae_fn = nn.L1Loss()
+
+    model.eval()
+    val_loss = 0.0
+    val_mae = 0.0
+    all_preds = []
+    with torch.no_grad():
+        for x_val, y_val in val_loader:
+            x_val, y_val = x_val.to(device), y_val.to(device)
+
+            y_pred = model(x_val).squeeze(1)
+            all_preds.append(y_pred)
+            loss = criterion(y_pred, y_val)
+            mae = mae_fn(y_pred, y_val)
+
+            val_loss += loss.item() * x_val.size(0)
+            val_mae += mae.item() * x_val.size(0)
+
+    val_loss = val_loss / len(val_loader.dataset)
+    val_mae = val_mae / len(val_loader.dataset)
+
+    return all_preds
