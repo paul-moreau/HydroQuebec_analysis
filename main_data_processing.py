@@ -11,14 +11,15 @@ data_pop = process_data_pop(data_pop)
 
 data_result = merge_df(data_hydro,data_pop,verbose=True)
 
-#data_result.to_csv('data/data_merged_brut.csv',index=False)
+data_result.to_csv('data/data_merged_brut.csv',index=False)
 
 final_data = normalize(data_result)
 final_data = to_one_hot(final_data)
 
 print(final_data)
-print(final_data.isna().sum())
-print(final_data.isna()==True)
+
+# There are NaN in the dataframe, to look
+final_data.dropna()
 
 final_data.to_csv('data/final_data.csv', index=False)
 
